@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <sys/wait.h>
 #include "general.h"
+#include <linux/limits.h>
 void parse_commands(char * line, char ** com_ary) {
   char * curr = line;
   char * token;
@@ -50,6 +51,7 @@ void execute_commands(char ** commands, char ** args ) {
     if(strcmp(commands[command_num], "exit") == 0) {
       exit(0);
     }
+
     pid_t pid = fork();
   	if (pid == -1) {
     		perror("error forking");
@@ -58,6 +60,16 @@ void execute_commands(char ** commands, char ** args ) {
   	else if (pid == 0) { // child
         char *args[256];
         parse_args(commands[command_num], args);
+        if (strncmp("cd", args[0], 2) == 0) {
+          char cwd[PATH_MAX];
+          getcwd(cwd, sizeof(cwd));
+          char * curr_dir = cwd;
+          char * token;
+          while ((token = strsep(&curr_dir, "/")) != NULL);
+          char new_cwd[PATH_MAX];
+          strncpy(new_cwd, cwd, strlen(cwd) - strlen(curr_dir));
+          printf("%s", new_cwd);
+        }
         execvp(args[0], args);
   	}
   	else {
