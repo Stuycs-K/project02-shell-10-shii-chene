@@ -11,7 +11,6 @@ int main() {
 	char line[200];
 
 	char ** args[200];
-
 	for (int i = 0; i < 10; i++) {
 		args[i] = malloc(sizeof(char) * 200);
 	}
@@ -30,6 +29,4 @@ int main() {
 		perror("error reading user input");
 		exit(1);
 	}
-	
-	print_args(args);
 }

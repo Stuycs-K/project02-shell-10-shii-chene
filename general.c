@@ -30,9 +30,6 @@ void print_args( char *** args ) {
 	}
 }
 
-void handle_args( char ** arg_ary ) {
-    if (strcmp(arg_ary[0], "cd") == 0) {
-        chdir(arg_ary[1]);
-        return;
-    }
+void handle_args( char *** args ) {
+    
 }
