@@ -29,4 +29,6 @@ int main() {
 		perror("error reading user input");
 		exit(1);
 	}
+
+	execute_args(args);
 }
