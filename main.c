@@ -8,8 +8,13 @@
 #include "prompt.h"
 
 int main() {
-	char * args[16];
-	char line[100];
+	char line[200];
+
+	char ** args[200];
+
+	for (int i = 0; i < 10; i++) {
+		args[i] = malloc(sizeof(char) * 200);
+	}
 
 	prompt();
 	if(fgets(line, sizeof(line), stdin) != NULL) {
@@ -25,4 +30,6 @@ int main() {
 		perror("error reading user input");
 		exit(1);
 	}
+	
+	print_args(args);
 }
