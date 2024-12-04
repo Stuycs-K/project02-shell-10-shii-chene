@@ -6,7 +6,7 @@
 #include "prompt.h"
 
 void prompt() {
-    char cwd[PATH_MAX];
+  char cwd[PATH_MAX];
 	getcwd(cwd, sizeof(cwd));
 	printf("%s $ ", cwd);
 	fflush(stdout);

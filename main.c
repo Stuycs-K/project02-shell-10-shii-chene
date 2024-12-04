@@ -3,7 +3,6 @@
 #include <unistd.h>
 #include <string.h>
 #include <linux/limits.h>
-
 #include "general.h"
 #include "prompt.h"
 
@@ -12,10 +11,6 @@ int main() {
 	char * commands[200];
 	char * args[200];
 	while (1) {
-		for (int i = 0; i < 10; i++) {
-			args[i] = malloc(sizeof(char) * 200);
-		}
-
 		prompt();
 		if(fgets(line, sizeof(line), stdin) != NULL) {
 			// Remove trailing newline if present
