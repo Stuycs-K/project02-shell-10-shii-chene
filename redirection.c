@@ -15,6 +15,5 @@ void redir_stdout(char* command) {
 	char * curr = line;
 	char * token;
 	token = strsep(&curr, ">");
-
+	
 }
-
