@@ -1,39 +1,21 @@
+#include <string.h>
+#include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
-#include <string.h>
-#include <sys/stat.h>
-#include <time.h>
-#include <sys/types.h>
+#include <sys/wait.h>
 #include "general.h"
-#include <fcntl.h>
-
-// char* user_input() {
-//   char cwd[256];
-//   getcwd(cwd, sizeof(cwd));
-//   char *curr = cwd;
-//   char *token;
-//   while (token != NULL) {
-//     token = strsep(&curr, "/");
-//   }
-//   char line[256];
-//   printf("~/%s/", curr);
-//   fgets(line, sizeof(line), stdin);
-//   line[strcspn(line, "\n")] = '\0';
-//   return line;
-
-// }
-void parse_commands(char * line, char ** commands) {
+#include <linux/limits.h>
+void parse_commands(char * line, char ** com_ary) {
   char * curr = line;
   char * token;
   token = strsep(&curr, ";");
   int index = 0;
   while (token != NULL) {
-    commands[index] = token;
-    token = strsep(&curr, " ");
+    com_ary[index] = token;
+    token = strsep(&curr, ";");
     index++;
   }
-  commands[index] = NULL;
+  com_ary[index] = NULL;
 }
 void parse_args(char * line, char ** arg_ary) {
   char * curr = line;
@@ -48,43 +30,63 @@ void parse_args(char * line, char ** arg_ary) {
   arg_ary[index] = NULL;
 }
 
-void run() {
-  char line[256];
-  char *args[256];
-  char *commands[256];
-  while (1) {
-    char cwd[256];
-    getcwd(cwd, sizeof(cwd));
-     char *curr = cwd;
-    char *token;
-    while (token != NULL) {
-      token = strsep(&curr, "/");
-    }
-    printf("~/%s/", curr); // prompt
-    fgets(line, sizeof(line), stdin);
-    line[strcspn(line, "\n")] = '\0';
-    parse_commands(line, commands);
-    int index = 0;
-    while (commands[index] != NULL) {
-      parse_args(command[i], args);
-      if (strcmp(args[0], "exit") == 0) {
-        exit(0);
-      }
-      pid_t pid = fork();
-      if (pid == -1) {
-        perror("forking went wrong");
-      }
-      else if (pid == 0) { // child
-        execvp(args[0], args);
-      }
-      else {
-        int status;
-        wait(&status);
-        index++;
-      }
-    }
-    
+// void print_args( char ** args ) {
+//     for (int i = 0; i < 10; i++) {
+//         if (args[i] == NULL) {
+// 			break;
+// 		}
+// 		for (int j = 0; j < 10; j++) {
+// 			if (args[i][j] == NULL) {
+// 				break;
+// 			}
+// 			printf("%s ", args[i][j]);
+// 		}
+// 		printf("\n");
+// 	}
+// }
+
+void execute_commands(char ** commands) {
+  char ** args = malloc(10 * sizeof(char*));
+  for (int i = 0; i < 10; i++) {
+    args[i] = malloc(200 * sizeof(char));
   }
 
+  int command_num = 0;
+  while (commands[command_num]) {
+    if(strcmp(commands[command_num], "exit") == 0) {
+      exit(0);
+    }
 
+    pid_t pid = fork();
+  	if (pid == -1) {
+    		perror("error forking");
+        exit(1);
+  	}
+  	else if (pid == 0) { // child
+        char *args[256];
+        parse_args(commands[command_num], args);
+        if (strncmp("cd", args[0], 2) == 0) {
+          char cwd[PATH_MAX];
+          getcwd(cwd, sizeof(cwd));
+          char * curr_dir = cwd;
+          char * token;
+          while ((token = strsep(&curr_dir, "/")) != NULL);
+          char new_cwd[PATH_MAX];
+          strncpy(new_cwd, cwd, strlen(cwd) - strlen(curr_dir));
+          printf("%s", new_cwd);
+        }
+        execvp(args[0], args);
+  	}
+  	else {
+    		int status;
+    		wait(&status);
+  	}
+
+    command_num++;
+  }
+
+  for (int i = 0; i < 10; i++) {
+    free(args[i]);
+  }
+  free(args);
 }
