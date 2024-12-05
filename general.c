@@ -48,15 +48,13 @@ void parse_args(char * line, char ** arg_ary) {
 // 	}
 // }
 void execute_pipe(char * left, char * right) {
-  char *args[] = {"touch", "temp", "\0"};
-  execvp(args[0], args);
- 
+  
   pid_t pid1 = fork();
   if (pid1 == -1) {
     perror("pipe fork");
   }
   if (pid1 == 0) {
-    int temp = open("temp", O_WRONLY);
+    int temp = open("temp.txt", O_WRONLY | 0644);
     int stdout = STDOUT_FILENO;
     int backup_stdout = dup(stdout);
     dup2(temp, stdout);
@@ -72,7 +70,7 @@ void execute_pipe(char * left, char * right) {
     perror("pipe fork 2");
   }
   if (pid2 == 0) {
-     int temp = open("temp", O_RDONLY);
+     int temp = open("temp.txt", O_RDONLY);
      int stdin = STDIN_FILENO;
      int backup_stdin = dup(stdin);
      dup2(stdin, temp);
@@ -100,10 +98,10 @@ void execute_commands(char ** commands) {
     }
     char *pipe = strchr(commands[command_num], '|');
     if (pipe != NULL) {
-      char * curr = commands[command_num];
-      char * right = strsep(&curr, "|");
-      printf("%s", curr);
-      execute_pipe(curr, right);
+      char * right = commands[command_num];
+      char * left = strsep(&right, "|");
+      printf("%s, %s\n", left, right);
+      execute_pipe(left, right);
       command_num++;
       continue;
     }
@@ -113,6 +111,7 @@ void execute_commands(char ** commands) {
         exit(1);
   	}
   	else if (pid == 0) { // child
+    
         execvp(args[0], args);
   	}
   	else {
@@ -122,5 +121,5 @@ void execute_commands(char ** commands) {
 
     command_num++;
   }
-
+  
 }
