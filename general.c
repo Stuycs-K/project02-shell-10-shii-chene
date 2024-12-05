@@ -47,6 +47,7 @@ void parse_args(char * line, char ** arg_ary) {
 // 		printf("\n");
 // 	}
 // }
+
 void execute_pipe(char * left, char * right) {
   
   pid_t pid1 = fork();
@@ -54,7 +55,7 @@ void execute_pipe(char * left, char * right) {
     perror("pipe fork");
   }
   if (pid1 == 0) {
-    int temp = open("temp.txt", O_WRONLY | 0644);
+    int temp = open("temp", O_WRONLY | O_CREAT | O_TRUNC, 0644);
     int stdout = STDOUT_FILENO;
     int backup_stdout = dup(stdout);
     dup2(temp, stdout);
@@ -70,15 +71,16 @@ void execute_pipe(char * left, char * right) {
     perror("pipe fork 2");
   }
   if (pid2 == 0) {
-     int temp = open("temp.txt", O_RDONLY);
+     int input = open("temp", O_RDONLY);
      int stdin = STDIN_FILENO;
      int backup_stdin = dup(stdin);
-     dup2(stdin, temp);
+     dup2(input, stdin);
      char *args[256];
     parse_args(right, args);
     execvp(args[0], args);
+    dup2(stdin, input);
     dup2(backup_stdin, stdin);
-    close(temp);
+    close(input);
     exit(1);
   }
 }
