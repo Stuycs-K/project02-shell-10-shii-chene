@@ -45,7 +45,12 @@ void parse_args(char * line, char ** arg_ary) {
 // 	}
 // }
 
-void execute_commands(char ** commands, char ** args ) {
+void execute_commands(char ** commands) {
+  char ** args = malloc(10 * sizeof(char*));
+  for (int i = 0; i < 10; i++) {
+    args[i] = malloc(200 * sizeof(char));
+  }
+
   int command_num = 0;
   while (commands[command_num]) {
     if(strcmp(commands[command_num], "exit") == 0) {
@@ -79,4 +84,9 @@ void execute_commands(char ** commands, char ** args ) {
 
     command_num++;
   }
+
+  for (int i = 0; i < 10; i++) {
+    free(args[i]);
+  }
+  free(args);
 }

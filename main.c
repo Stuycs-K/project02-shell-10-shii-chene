@@ -9,7 +9,6 @@
 int main() {
 	char line[200];
 	char * commands[200];
-	char * args[200];
 	while (1) {
 		prompt();
 		if(fgets(line, sizeof(line), stdin) != NULL) {
@@ -25,7 +24,7 @@ int main() {
 			perror("error reading user input");
 			exit(1);
 		}
-		execute_commands(commands, args);
+		execute_commands(commands);
 
 	}
 
