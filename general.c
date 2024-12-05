@@ -46,35 +46,24 @@ void parse_args(char * line, char ** arg_ary) {
 // }
 
 void execute_commands(char ** commands) {
-  char ** args = malloc(10 * sizeof(char*));
-  for (int i = 0; i < 10; i++) {
-    args[i] = malloc(200 * sizeof(char));
-  }
-
   int command_num = 0;
+  char *args[256];
+  parse_args(commands[command_num], args);
   while (commands[command_num]) {
     if(strcmp(commands[command_num], "exit") == 0) {
       exit(0);
     }
-
+    if (strcmp("cd", args[0]) == 0) {
+        chdir(args[1]);
+        command_num++;
+        continue;
+    }
     pid_t pid = fork();
   	if (pid == -1) {
     		perror("error forking");
         exit(1);
   	}
   	else if (pid == 0) { // child
-        char *args[256];
-        parse_args(commands[command_num], args);
-        if (strncmp("cd", args[0], 2) == 0) {
-          char cwd[PATH_MAX];
-          getcwd(cwd, sizeof(cwd));
-          char * curr_dir = cwd;
-          char * token;
-          while ((token = strsep(&curr_dir, "/")) != NULL);
-          char new_cwd[PATH_MAX];
-          strncpy(new_cwd, cwd, strlen(cwd) - strlen(curr_dir));
-          printf("%s", new_cwd);
-        }
         execvp(args[0], args);
   	}
   	else {
@@ -85,8 +74,4 @@ void execute_commands(char ** commands) {
     command_num++;
   }
 
-  for (int i = 0; i < 10; i++) {
-    free(args[i]);
-  }
-  free(args);
 }
