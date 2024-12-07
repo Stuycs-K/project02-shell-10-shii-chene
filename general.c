@@ -115,8 +115,8 @@ void execute_commands(char ** commands) {
           section[pipeIndices[0]] = NULL;
         }
         else if (section_num == totalPipes) {
-          memcpy(section, &args[pipeIndices[section_num - 1] + 1], (total_args(args) - pipeIndices[section_num] - 1) * sizeof(char*));
-          section[total_args(args) - pipeIndices[section_num] - 1] = NULL;
+          memcpy(section, &args[pipeIndices[section_num - 1] + 1], (total_args(args) - pipeIndices[section_num - 1] - 1) * sizeof(char*));
+          section[total_args(args) - pipeIndices[section_num - 1] - 1] = NULL;
         }
         else {
           memcpy(section, &args[pipeIndices[section_num - 1] + 1], (pipeIndices[section_num] - pipeIndices[section_num - 1] - 1) * sizeof(char*));
