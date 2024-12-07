@@ -25,7 +25,5 @@ int main() {
 			exit(1);
 		}
 		execute_commands(commands);
-
 	}
-
 }
