@@ -3,11 +3,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/wait.h>
-#include "general.h"
 #include <linux/limits.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+
+#include "general.h"
+#include "utils.h"
+
 void parse_commands(char * line, char ** com_ary) {
   char * curr = line;
   char * token;
@@ -25,15 +28,6 @@ void parse_args(char * line, char ** arg_ary) {
   char * curr = line;
   int arg_num = 0;
   while (arg_ary[arg_num++] = strsep(&curr, " "));
-}
-
-void print_args( char ** args ) {
-  int arg_num = 0;
-  while(args[arg_num] != NULL) {
-    printf("%s \n", args[arg_num]);
-    arg_num++;
-  }
-  printf("\n");
 }
 
 void execute_pipe(char * left, char * right) {  
@@ -70,16 +64,6 @@ void execute_pipe(char * left, char * right) {
     close(input);
     exit(1);
   }
-}
-
-int total_args(char ** args) {
-  int totalArgs = 0;
-  int argNum = 0;
-  while (args[argNum] != NULL) {
-    totalArgs++;
-    argNum++;
-  }
-  return totalArgs;
 }
 
 void execute_commands(char ** commands) {
