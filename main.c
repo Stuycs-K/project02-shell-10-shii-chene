@@ -3,8 +3,10 @@
 #include <unistd.h>
 #include <string.h>
 #include <linux/limits.h>
+
 #include "general.h"
 #include "prompt.h"
+#include "utils.h"
 
 int main() {
 	char line[200];
@@ -21,7 +23,7 @@ int main() {
 			parse_commands(line, commands);
 		}
 		else {
-			perror("error reading user input");
+			perror("error reading user input\n");
 			exit(1);
 		}
 		execute_commands(commands);

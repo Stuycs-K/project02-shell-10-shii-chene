@@ -13,4 +13,4 @@ general.o: general.c general.h utils.h
 utils.o: utils.c utils.h
 	@gcc -c utils.c
 clean:
-	@rm -f shell *.o
+	@rm -f shell *.o temp.txt

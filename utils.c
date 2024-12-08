@@ -2,6 +2,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stddef.h>
+#include <stdbool.h>
+#include <unistd.h>
 
 #include "utils.h"
 
@@ -22,4 +24,8 @@ int total_args(char ** args) {
     argNum++;
   }
   return totalArgs;
+}
+
+bool temp_exists() {
+  return access("temp.txt", F_OK) == 0;
 }
