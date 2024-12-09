@@ -8,7 +8,6 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <stdbool.h>
-
 #include "general.h"
 #include "utils.h"
 
@@ -31,202 +30,171 @@ void parse_args(char * line, char ** arg_ary) {
   while (arg_ary[arg_num++] = strsep(&curr, " "));
 }
 
-// each section will only have one < or > at most
-void handle_section(char ** section, bool isFirstSection, bool isLastSection) {
-  char redirect = '\0'; // doesnt include pipe, since sections are already split on pipes
-  int arg = 0;
-  while (section[arg]) {
-    if (strcmp(section[arg], "<") == 0 || strcmp(section[arg], ">") == 0) {
-      redirect = section[arg][0];
-      break;
+void handle_section(char **section, int isFirstSection, int isLastSection) {
+    char redirect = '\0';// doesnt include pipe, since sections are already split on pipes
+    int arg = 0;
+    while (section[arg]) {
+        if (strcmp(section[arg], "<") == 0 || strcmp(section[arg], ">") == 0) {
+            redirect = section[arg][0];
+            break;
+        }
+        arg++;
     }
-    arg++;
-  }
 
-  if (redirect == '\0') {
-    if (isLastSection) {
-      if (temp_exists()) {
-        int temp = open("temp.txt", O_RDONLY);
-        int stdin = STDIN_FILENO;
-        int backup_stdin = dup(stdin);
-        dup2(temp, stdin);
+    if (redirect == '\0') { // No redirection
+        if (isLastSection) {
+            if (temp_exists()) {
+                int temp = open("temp.txt", O_RDONLY);
+                if (temp == -1) {
+                    perror("Error opening temp file for reading");
+                    exit(1);
+                }
+                int backup_stdin = dup(STDIN_FILENO);
+                dup2(temp, STDIN_FILENO);
+
+                pid_t pid = fork();
+                if (pid == -1) {
+                    perror("Error forking");
+                    exit(1);
+                } else if (pid == 0) { // Child process
+                    execvp(section[0], section);
+                    perror("Error executing command");
+                    exit(1);
+                } else { // Parent process
+                    close(temp);
+                    wait(NULL);
+                }
+
+                dup2(backup_stdin, STDIN_FILENO);
+                close(backup_stdin);
+            } else {
+                pid_t pid = fork();
+                if (pid == -1) {
+                    perror("Error forking");
+                    exit(1);
+                } else if (pid == 0) { // Child process
+                    execvp(section[0], section);
+                    perror("Error executing command");
+                    exit(1);
+                } else { // Parent process
+                    wait(NULL);
+                }
+            }
+        } else if (isFirstSection) {
+            int temp = open("temp.txt", O_WRONLY | O_CREAT | O_TRUNC, 0644);
+            if (temp == -1) {
+                perror("Error opening temp file for writing");
+                exit(1);
+            }
+            int backup_stdout = dup(STDOUT_FILENO);
+            dup2(temp, STDOUT_FILENO);
+
+            pid_t pid = fork();
+            if (pid == -1) {
+                perror("Error forking");
+                exit(1);
+            } else if (pid == 0) { // Child process
+                execvp(section[0], section);
+                perror("Error executing command");
+                exit(1);
+            } else { // Parent process
+                close(temp);
+                wait(NULL);
+            }
+
+            dup2(backup_stdout, STDOUT_FILENO);
+            close(backup_stdout);
+        } else { // Intermediate section
+            int temp_read = open("temp.txt", O_RDONLY);
+            int temp_write = open("temp.txt", O_WRONLY | O_TRUNC);
+            if (temp_read == -1 || temp_write == -1) {
+                perror("Error opening temp file 2nd pipe");
+                exit(1);
+            }
+
+            int backup_stdin = dup(STDIN_FILENO);
+            int backup_stdout = dup(STDOUT_FILENO);
+            dup2(temp_read, STDIN_FILENO);
+            dup2(temp_write, STDOUT_FILENO);
+
+            pid_t pid = fork();
+            if (pid == -1) {
+                perror("Error forking");
+                exit(1);
+            } else if (pid == 0) { // Child process
+                execvp(section[0], section);
+                perror("Error second command");
+                exit(1);
+            } else { // Parent process
+                close(temp_read);
+                close(temp_write);
+                wait(NULL);
+            }
+
+            dup2(backup_stdin, STDIN_FILENO);
+            dup2(backup_stdout, STDOUT_FILENO);
+            close(backup_stdin);
+            close(backup_stdout);
+        }
+    } else if (redirect == '<') { 
+        char *fileName = section[arg + 1];
+        section[arg] = NULL; 
+        int file = open(fileName, O_RDONLY);
+        if (file == -1) {
+            perror("Error opening input file");
+            exit(1);
+        }
+
+        int backup_stdin = dup(STDIN_FILENO);
+        dup2(file, STDIN_FILENO);
 
         pid_t pid = fork();
         if (pid == -1) {
-            perror("error forking");
+            perror("Error forking");
             exit(1);
-        }
-        else if (pid == 0) { // child
-          execvp(section[0], section);
-        }
-        else {
-          int status;
-          wait(&status);
+        } else if (pid == 0) { // Child process
+            execvp(section[0], section);
+            perror("Error executing command");
+            exit(1);
+        } else { // Parent process
+            close(file);
+            wait(NULL);
         }
 
-        dup2(backup_stdin, stdin);
-      }
-      else {
+        dup2(backup_stdin, STDIN_FILENO);
+        close(backup_stdin);
+    } else if (redirect == '>') { // Output redirection
+        char *fileName = section[arg + 1];
+        section[arg] = NULL; 
+        int file = open(fileName, O_WRONLY | O_CREAT | O_TRUNC, 0644);
+        if (file == -1) {
+            perror("Error opening output file");
+            exit(1);
+        }
+
+        int backup_stdout = dup(STDOUT_FILENO);
+        dup2(file, STDOUT_FILENO);
+
         pid_t pid = fork();
         if (pid == -1) {
-            perror("error forking");
+            perror("Forking");
             exit(1);
+        } else if (pid == 0) { // Child 
+            execvp(section[0], section);
+            perror("Execution error");
+            exit(1);
+        } else { // Parent 
+            close(file);
+            wait(NULL);
         }
-        else if (pid == 0) { // child
-          execvp(section[0], section);
-        }
-        else {
-          int status;
-          wait(&status);
-        }
-      }
+
+        dup2(backup_stdout, STDOUT_FILENO);
+        close(backup_stdout);
+    } else {
+        fprintf(stderr, "Invalid redirect detected\n");
+        exit(1);
     }
-    else if (isFirstSection) {
-      int temp = open("temp.txt", O_WRONLY | O_CREAT, 0644);
-      int stdout = STDOUT_FILENO;
-      int backup_stdout = dup(stdout);
-      dup2(temp, stdout);
-
-      pid_t pid = fork();
-      if (pid == -1) {
-          perror("error forking");
-          exit(1);
-      }
-      else if (pid == 0) { // child
-        execvp(section[0], section);
-      }
-      else {
-        int status;
-        wait(&status);
-      }
-
-      dup2(backup_stdout, stdout);
-    }
-    else {
-      int temp = open("temp.txt", O_WRONLY | O_RDONLY);
-      int stdout = STDOUT_FILENO;
-      int backup_stdout = dup(stdout);
-      dup2(temp, stdout);
-      int stdin = STDIN_FILENO;
-      int backup_stdin = dup(stdin);
-      dup2(temp, stdin);
-      
-      pid_t pid = fork();
-      if (pid == -1) {
-          perror("error forking");
-          exit(1);
-      }
-      else if (pid == 0) { // child
-        execvp(section[0], section);
-      }
-      else {
-        int status;
-        wait(&status);
-      }
-
-      dup2(backup_stdin, stdin);
-      dup2(backup_stdout, stdout);
-    }
-  }
-  else if (redirect == '<') {
-    char * fileName = section[total_args(section) - 1];
-    section[total_args(section) - 2] = NULL; // location of the redirect
-    int file = open(fileName, O_RDONLY);
-    int stdin = STDIN_FILENO;
-    int backup_stdin = dup(stdin);
-    dup2(file, stdin);
-
-    if (!isLastSection) {
-      int temp = open("temp.txt", O_WRONLY | O_CREAT, 0644);
-      int stdout = STDOUT_FILENO;
-      int backup_stdout = dup(stdout);
-      dup2(temp, stdout);
-
-      pid_t pid = fork();
-      if (pid == -1) {
-          perror("error forking");
-          exit(1);
-      }
-      else if (pid == 0) { // child
-        execvp(section[0], section);
-      }
-      else {
-        int status;
-        wait(&status);
-      }
-
-      dup2(backup_stdout, stdout);
-    }
-    else {
-      pid_t pid = fork();
-      if (pid == -1) {
-          perror("error forking");
-          exit(1);
-      }
-      else if (pid == 0) { // child
-        execvp(section[0], section);
-      }
-      else {
-        int status;
-        wait(&status);
-      }
-    }
-
-    section[total_args(section) - 2] = "<"; // put the redirect back, although its not really used anywhere else
-    dup2(backup_stdin, stdin);
-  }
-  else if (redirect == '>') {
-    char * fileName = section[total_args(section) - 1];
-    section[total_args(section) - 2] = NULL; // location of redirect
-    int file = open(fileName, O_WRONLY | O_CREAT, 0644);
-    int stdout = STDOUT_FILENO;
-    int backup_stdout = dup(stdout);
-    dup2(file, stdout);
-
-    if (!isFirstSection) {
-      int temp = open("temp.txt", O_WRONLY | O_CREAT, 0644);
-      int stdin = STDIN_FILENO;
-      int backup_stdin = dup(stdin);
-      dup2(temp, stdin);
-
-      pid_t pid = fork();
-      if (pid == -1) {
-          perror("error forking");
-          exit(1);
-      }
-      else if (pid == 0) { // child
-        execvp(section[0], section);
-      }
-      else {
-        int status;
-        wait(&status);
-      }
-
-      dup2(backup_stdin, stdin);
-    }
-    else {
-      pid_t pid = fork();
-      if (pid == -1) {
-          perror("error forking");
-          exit(1);
-      }
-      else if (pid == 0) { // child
-        execvp(section[0], section);
-      }
-      else {
-        int status;
-        wait(&status);
-      }
-    }
-
-    section[total_args(section) - 2] = ">"; // put the redirect back, although its not really used anywhere else
-    dup2(backup_stdout, stdout);
-  }
-  else {
-    perror("invalid redirect detected\n");
-    exit(1);
-  }
-} 
+}
 
 void execute_commands(char ** commands) {
   int command_num = 0;
@@ -238,14 +206,17 @@ void execute_commands(char ** commands) {
     if(strcmp(command, "exit") == 0) {
       exit(0);
     }
-  if (strcmp(command, "cd") == 0) {
-    if (chdir(args[1]) == -1) {
-     perror("no change directory");
+    if (strcmp(command, "cd") == 0) {
+        if (chdir(args[1]) == -1) {
+      perror("no change directory");
+      }
+      command_num++;
+      continue;
     }
-    command_num++;
-    continue;
-  }
-   
+    // if (args[0] == NULL) {
+    //   printf("\n");
+    //   exit(0);
+    // }
 
     int pipeIndices[10];
     int totalPipes = 0;
@@ -257,7 +228,6 @@ void execute_commands(char ** commands) {
       index++;
     }
 
-    
       for (int section_num = 0; section_num <= totalPipes; section_num++) {
         char ** section = calloc(10, sizeof(char*));
         if (section_num == 0) {
