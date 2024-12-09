@@ -9,13 +9,22 @@
 #include "utils.h"
 
 int main() {
-    char line[200];
-    char * commands[200];
+    char line[256];
+    char * commands[256];;
+
+    
     while (1) {
         prompt();
         if (fgets(line, sizeof(line), stdin) == NULL) {
-			printf("\n");
-            exit(0);
+			if (feof(stdin)) {
+                printf("\n");
+                break;
+			}
+			else {
+				perror("error reading input");
+                printf("\n");
+            	exit(1);
+			}
         }
 
         int len = strlen(line);
@@ -26,4 +35,5 @@ int main() {
         parse_commands(line, commands);
         execute_commands(commands);
     }
+    return 0;
 }
