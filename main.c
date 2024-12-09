@@ -23,8 +23,10 @@ int main() {
 			parse_commands(line, commands);
 		}
 		else {
-			perror("error reading user input\n");
-			exit(1);
+			printf("\n");
+			fflush(stdout);
+			exit(0);
+			
 		}
 		execute_commands(commands);
 	}
