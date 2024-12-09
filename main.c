@@ -15,7 +15,6 @@ int main() {
         prompt();
         if (fgets(line, sizeof(line), stdin) == NULL) {
 			printf("\n");
-			fflush(stdin);
             exit(0);
         }
 
