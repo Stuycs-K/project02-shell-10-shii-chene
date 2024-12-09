@@ -8,7 +8,9 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <sys/stat.h>
 void parse_commands(char * line, char ** com_ary) {
+  printf("%s\n", line);
   char * curr = line;
   char * token;
   token = strsep(&curr, ";");
@@ -18,6 +20,7 @@ void parse_commands(char * line, char ** com_ary) {
     token = strsep(&curr, ";");
     index++;
   }
+  printf("%s\n", com_ary[0]);
   com_ary[index] = NULL;
 }
 void parse_args(char * line, char ** arg_ary) {
@@ -71,6 +74,7 @@ void execute_pipe(char * left, char * right) {
     perror("pipe fork 2");
   }
   if (pid2 == 0) {
+      printf("child2 running");
      int input = open("temp", O_RDONLY);
      int stdin = STDIN_FILENO;
      int backup_stdin = dup(stdin);
@@ -78,7 +82,6 @@ void execute_pipe(char * left, char * right) {
      char *args[256];
     parse_args(right, args);
     execvp(args[0], args);
-    dup2(stdin, input);
     dup2(backup_stdin, stdin);
     close(input);
     exit(1);
@@ -88,25 +91,30 @@ void execute_pipe(char * left, char * right) {
 void execute_commands(char ** commands) {
   int command_num = 0;
   char *args[256];
-  parse_args(commands[command_num], args);
+  //parse_args(commands[command_num], args);
   while (commands[command_num]) {
     if(strcmp(commands[command_num], "exit") == 0) {
       exit(0);
     }
-    if (strcmp("cd", args[0]) == 0) {
-        chdir(args[1]);
-        command_num++;
-        continue;
-    }
+
+    printf("%sasd\n", commands[command_num] );
     char *pipe = strchr(commands[command_num], '|');
+
+    
     if (pipe != NULL) {
       char * right = commands[command_num];
-      char * left = strsep(&right, "|");
-      printf("%s, %s\n", left, right);
+      char * left = strsep(&right, " ");
+      strsep(&right, "|");
+      strsep(&right, " ");
+      printf("left %s, right %s\n", left, right);
       execute_pipe(left, right);
       command_num++;
       continue;
     }
+    else {
+      printf("PIPE IS NULL");
+    }
+    parse_args(commands[command_num], args);
     pid_t pid = fork();
   	if (pid == -1) {
     		perror("error forking");
