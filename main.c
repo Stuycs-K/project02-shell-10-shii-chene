@@ -23,7 +23,7 @@ int main() {
 			parse_commands(line, commands);
 		}
 		else {
-			perror("error reading user input\n");
+			fflush(stdin);
 			exit(1);
 		}
 		execute_commands(commands);
