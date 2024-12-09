@@ -9,8 +9,8 @@
 #include "utils.h"
 
 int main() {
-	char line[256];
-	char * commands[256];
+	char line[200];
+	char * commands[200];
 	while (1) {
 		prompt();
 		if(fgets(line, sizeof(line), stdin) != NULL) {
