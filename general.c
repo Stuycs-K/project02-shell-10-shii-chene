@@ -36,7 +36,7 @@ void parse_args(char * line, char ** arg_ary) {
 // each section will only have one < or > at most
 void handle_section(char ** section, bool isFirstSection, bool isLastSection) {
   if(strcmp(section[0], "exit") == 0) {
-    exit(0);
+    exit(6);
   }
   if (strcmp(section[0], "cd") == 0) {
     chdir(section[1]);
@@ -284,11 +284,15 @@ void execute_commands(char ** commands) {
           handle_section(section, false, false);
         }
         free(section);
+        exit(0);
       }
   	}
   	else {
       int status;
       wait(&status);
+      if (WEXITSTATUS(status) == 6) {
+        exit(0);
+      }
   	}
 
     command_num++;
