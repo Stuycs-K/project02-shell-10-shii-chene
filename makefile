@@ -1,8 +1,8 @@
 .PHONY: run compile clean
 
-run: shell
+run: shell.out
 	@./shell.out
-compile shell: main.o prompt.o general.o utils.o
+compile shell.out: main.o prompt.o general.o utils.o
 	@gcc -o shell.out main.o prompt.o general.o utils.o
 main.o: main.c prompt.h general.h
 	@gcc -c main.c

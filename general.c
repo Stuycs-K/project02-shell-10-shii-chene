@@ -12,6 +12,12 @@
 #include "general.h"
 #include "utils.h"
 
+// char * line - the line of commands to be parsed
+// char ** com_ary - where the parsed commands will be stored
+// return type void
+// parse_commands splits the input (line) command line into individual commands 
+// using strsep and a semicolon as the delimited. The resulting commands are 
+// stored in the com_ary.
 void parse_commands(char * line, char ** com_ary) {
   char * curr = line;
   char * token;
@@ -25,6 +31,10 @@ void parse_commands(char * line, char ** com_ary) {
   com_ary[index] = NULL;
 }
 
+// char * line - the command to be parsed 
+// char ** arg_ary - where the arguments of the command will be stored
+// return type void 
+// parse_args parses a command(line) into individual arguments and stores the into arg_ary
 void parse_args(char * line, char ** arg_ary) {
   char * curr = line;
   int arg_num = 0;
@@ -32,6 +42,12 @@ void parse_args(char * line, char ** arg_ary) {
 }
 
 // each section will only have one < or > at most
+// char ** section - the array of arguments of the command section
+// bool isFirstSection - indicates if this is the first section of the command
+// bool isLastSection - indicated if this is the last section of the command
+// return type void
+// handle_section handles exiting, and changing the directory.
+// It forks to execute programs. It also handles any redirections and pipes.
 void handle_section(char ** section, bool isFirstSection, bool isLastSection) {
   if(strcmp(section[0], "exit") == 0) {
     exit(0);
@@ -254,6 +270,10 @@ void handle_section(char ** section, bool isFirstSection, bool isLastSection) {
     wait(&status);
   }
 } 
+
+// char ** commands - an array of commands 
+// return type void
+// execute_commands iterates through the commands, parses its arguments, and passes it on to handle_section to be executed.
 
 void execute_commands(char ** commands) {
   int command_num = 0;
