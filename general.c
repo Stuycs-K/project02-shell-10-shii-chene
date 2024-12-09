@@ -8,6 +8,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <stdbool.h>
+
 #include "general.h"
 #include "utils.h"
 
@@ -58,7 +59,8 @@ void handle_section(char **section, int isFirstSection, int isLastSection) {
                     exit(1);
                 } else if (pid == 0) { // Child process
                     execvp(section[0], section);
-                    perror("Error executing command");
+                    printf("%s", section[1]);
+                    perror("Error executing command 1");
                     exit(1);
                 } else { // Parent process
                     close(temp);
@@ -93,9 +95,9 @@ void handle_section(char **section, int isFirstSection, int isLastSection) {
             if (pid == -1) {
                 perror("Error forking");
                 exit(1);
-            } else if (pid == 0) { // Child process
+            } else if (pid == 0) { // Child proces
                 execvp(section[0], section);
-                perror("Error executing command");
+                perror("")
                 exit(1);
             } else { // Parent process
                 close(temp);
@@ -165,7 +167,7 @@ void handle_section(char **section, int isFirstSection, int isLastSection) {
         close(backup_stdin);
     } else if (redirect == '>') { // Output redirection
         char *fileName = section[arg + 1];
-        section[arg] = NULL; 
+        section[arg] = NULL; // Remove redirect symbol and file from arguments
         int file = open(fileName, O_WRONLY | O_CREAT | O_TRUNC, 0644);
         if (file == -1) {
             perror("Error opening output file");
@@ -206,17 +208,14 @@ void execute_commands(char ** commands) {
     if(strcmp(command, "exit") == 0) {
       exit(0);
     }
-    if (strcmp(command, "cd") == 0) {
-        if (chdir(args[1]) == -1) {
-      perror("no change directory");
-      }
-      command_num++;
-      continue;
+  if (strcmp(command, "cd") == 0) {
+    if (chdir(args[1]) == -1) {
+     perror("no change directory");
     }
-    // if (args[0] == NULL) {
-    //   printf("\n");
-    //   exit(0);
-    // }
+    command_num++;
+    continue;
+  }
+   
 
     int pipeIndices[10];
     int totalPipes = 0;
