@@ -24,6 +24,18 @@ void parse_commands(char * line, char ** com_ary) {
   com_ary[index] = NULL;
 }
 
+// void parse_args(char * line, char ** com_ary) {
+//   char * curr = line;
+//   char * token;
+//   token = strsep(&curr, ";");
+//   int index = 0;
+//   while (token != NULL) {
+//     com_ary[index] = token;
+//     token = strsep(&curr, ";");
+//     index++;
+//   }
+//   com_ary[index] = NULL;
+// }
 void parse_args(char * line, char ** arg_ary) {
   char * curr = line;
   int arg_num = 0;
@@ -56,9 +68,9 @@ void handle_section(char **section, int isFirstSection, int isLastSection) {
                 if (pid == -1) {
                     perror("Error forking");
                     exit(1);
-                } else if (pid == 0) { // Child process
+                } else if (pid == 0) { // Child proces
                     execvp(section[0], section);
-                    perror("Error executing command");
+                    perror("Error executing command 1");
                     exit(1);
                 } else { // Parent process
                     close(temp);
