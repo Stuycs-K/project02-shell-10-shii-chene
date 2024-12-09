@@ -9,6 +9,8 @@ Team The Ian-credible and Liz-tacular
   - Prompt
   - Exit
   - Redirection and Pipes
+# Bugs
+Reading from a file only allows for two lines or it will forever loop. Ctrl-D works to exit when typing in commands.
     
 # void parse_commands(char * line, char ** com_ary)
 - char * line - the line of commands to be parsed
