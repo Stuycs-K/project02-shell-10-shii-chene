@@ -13,7 +13,6 @@
 #include "utils.h"
 
 void parse_commands(char * line, char ** com_ary) {
-  printf("%s\n", line);
   char * curr = line;
   char * token;
   token = strsep(&curr, ";");
@@ -23,7 +22,6 @@ void parse_commands(char * line, char ** com_ary) {
     token = strsep(&curr, ";");
     index++;
   }
-  printf("%s\n", com_ary[0]);
   com_ary[index] = NULL;
 }
 
@@ -259,12 +257,7 @@ void execute_commands(char ** commands) {
       index++;
     }
 
-    pid_t pid = fork();
-  	if (pid == -1) {
-    		perror("error forking");
-        exit(1);
-  	}
-  	else if (pid == 0) { // child
+    
       for (int section_num = 0; section_num <= totalPipes; section_num++) {
         char ** section = calloc(10, sizeof(char*));
         if (section_num == 0) {
@@ -288,17 +281,9 @@ void execute_commands(char ** commands) {
           handle_section(section, false, false);
         }
         free(section);
-        exit(0);
+        command_num++;
       }
   	}
-  	else {
-      int status;
-      wait(&status);
-      if (WEXITSTATUS(status) == 6) {
-        exit(0);
-      }
-  	}
-
-    command_num++;
+  	
   }
-}
+
