@@ -35,14 +35,6 @@ void parse_args(char * line, char ** arg_ary) {
 
 // each section will only have one < or > at most
 void handle_section(char ** section, bool isFirstSection, bool isLastSection) {
-  if(strcmp(section[0], "exit") == 0) {
-    exit(6);
-  }
-  if (strcmp(section[0], "cd") == 0) {
-    chdir(section[1]);
-    return;
-  }
-
   char redirect = '\0'; // doesnt include pipe, since sections are already split on pipes
   int arg = 0;
   while (section[arg]) {
@@ -242,8 +234,20 @@ void execute_commands(char ** commands) {
   int command_num = 0;
   char *args[256];
   while (commands[command_num]) {
+    
     char * command = commands[command_num];
-    parse_args(command, args);
+     parse_args(command, args);
+    if(strcmp(command, "exit") == 0) {
+      exit(0);
+    }
+  if (strcmp(command, "cd") == 0) {
+    if (chdir(args[1]) == -1) {
+     perror("no change directory");
+    }
+    command_num++;
+    continue;
+  }
+   
 
     int pipeIndices[10];
     int totalPipes = 0;
